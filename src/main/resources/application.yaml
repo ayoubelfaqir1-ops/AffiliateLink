@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: affiliateLink
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+server:
+  port: 8081
