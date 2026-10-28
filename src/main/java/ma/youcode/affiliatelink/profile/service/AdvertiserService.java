@@ -6,6 +6,7 @@ import ma.youcode.affiliatelink.common.exception.ResourceNotFoundException;
 import ma.youcode.affiliatelink.profile.dto.AdvertiserResponse;
 import ma.youcode.affiliatelink.profile.dto.CreateAdvertiserRequest;
 import ma.youcode.affiliatelink.profile.entity.Advertiser;
+import ma.youcode.affiliatelink.profile.mapper.AdvertiserMapper;
 import ma.youcode.affiliatelink.profile.repository.AdvertiserRepository;
 import ma.youcode.affiliatelink.profile.repository.ProfileRepository;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class AdvertiserService {
 
     private final AdvertiserRepository advertiserRepository;
     private final ProfileRepository profileRepository;
+    private final AdvertiserMapper advertiserMapper;
 
     @Transactional
     public AdvertiserResponse createAdvertiser(CreateAdvertiserRequest request) {
@@ -27,27 +29,21 @@ public class AdvertiserService {
             throw new BusinessRuleException("Email " + request.email() + " is already in use");
         }
 
-        Advertiser advertiser = new Advertiser(
-            request.email(),
-            request.companyName(),
-            request.sector(),
-            request.website()
-        );
-
+        Advertiser advertiser = advertiserMapper.toEntity(request);
         Advertiser savedAdvertiser = advertiserRepository.save(advertiser);
-        return AdvertiserResponse.from(savedAdvertiser);
+        return advertiserMapper.toResponse(savedAdvertiser);
     }
 
     public AdvertiserResponse getAdvertiserById(Long id) {
         return advertiserRepository.findById(id)
-            .map(AdvertiserResponse::from)
+            .map(advertiserMapper::toResponse)
             .orElseThrow(() -> new ResourceNotFoundException("Advertiser not found with id: " + id));
     }
 
     public List<AdvertiserResponse> getAllAdvertisers() {
         return advertiserRepository.findAll()
             .stream()
-            .map(AdvertiserResponse::from)
+            .map(advertiserMapper::toResponse)
             .toList();
     }
 }
