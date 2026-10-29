@@ -16,21 +16,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdvertiserController {
 
-    private final AdvertiserService advertiserService ;
+    private final AdvertiserService advertiserService;
 
     @PostMapping
-    public ResponseEntity<AdvertiserResponse> createPublisher(@Valid @RequestBody CreateAdvertiserRequest request) {
+    public ResponseEntity<AdvertiserResponse> createAdvertiser(@Valid @RequestBody CreateAdvertiserRequest request) {
         AdvertiserResponse created = advertiserService.createAdvertiser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping
-    public ResponseEntity<List<AdvertiserResponse>> getAllPublishers() {
+    public ResponseEntity<List<AdvertiserResponse>> getAllAdvertisers() {
         return ResponseEntity.ok(advertiserService.getAllAdvertisers());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AdvertiserResponse> getPublisherById(@PathVariable Long id) {
+    public ResponseEntity<AdvertiserResponse> getAdvertiserById(@PathVariable Long id) {
         return ResponseEntity.ok(advertiserService.getAdvertiserById(id));
     }
 }
