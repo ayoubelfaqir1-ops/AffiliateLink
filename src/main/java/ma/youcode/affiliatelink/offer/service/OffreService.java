@@ -1,6 +1,7 @@
 package ma.youcode.affiliatelink.offer.service;
 
 import lombok.RequiredArgsConstructor;
+import ma.youcode.affiliatelink.common.enums.Niche;
 import ma.youcode.affiliatelink.common.exception.ResourceNotFoundException;
 import ma.youcode.affiliatelink.offer.dto.CampaignResponse;
 import ma.youcode.affiliatelink.offer.dto.CreateCampaignRequest;
@@ -14,14 +15,17 @@ import ma.youcode.affiliatelink.offer.mapper.CampaignMapper;
 import ma.youcode.affiliatelink.offer.mapper.OffreMapper;
 import ma.youcode.affiliatelink.offer.repository.CampaignRepository;
 import ma.youcode.affiliatelink.offer.repository.OffreRepository;
+import ma.youcode.affiliatelink.offer.repository.OffreSpecification;
 import ma.youcode.affiliatelink.offer.repository.TagRepository;
 import ma.youcode.affiliatelink.profile.api.AdvertiserApi;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -99,6 +103,17 @@ public class OffreService {
 
         // 5. Return response DTO with generated id
         return campaignMapper.toResponse(savedCampaign);
+    }
+
+    public Page<OffreResponse> searchOffres(Niche niche, Long advertiserId, String tag, String keyword, Pageable pageable) {
+        Specification<Offre> spec = Specification
+            .where(OffreSpecification.hasNiche(niche))
+            .and(OffreSpecification.hasAdvertiserId(advertiserId))
+            .and(OffreSpecification.hasTag(tag))
+            .and(OffreSpecification.containsKeyword(keyword));
+
+        return offreRepository.findAll(spec, pageable)
+            .map(offreMapper::toResponse);
     }
 
     private Set<Tag> resolveTags(Set<String> tagNames) {
