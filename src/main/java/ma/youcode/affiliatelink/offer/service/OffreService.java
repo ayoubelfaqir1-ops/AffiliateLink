@@ -1,7 +1,9 @@
 package ma.youcode.affiliatelink.offer.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ma.youcode.affiliatelink.common.enums.Niche;
+import ma.youcode.affiliatelink.common.exception.BusinessRuleException;
 import ma.youcode.affiliatelink.common.exception.ResourceNotFoundException;
 import ma.youcode.affiliatelink.offer.dto.CampaignResponse;
 import ma.youcode.affiliatelink.offer.dto.CreateCampaignRequest;
@@ -27,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -41,13 +44,21 @@ public class OffreService {
 
     @Transactional
     public OffreResponse create(CreateOffreRequest request) {
+        log.info("Creating offer for advertiser ID: {}", request.advertiserId());
+
         // 1. Verify advertiser exists across module boundary via API
         advertiserApi.getAdvertiserById(request.advertiserId());
 
-        // 2. Map basic fields
+        // 2. Business Rule: Only ACTIVE advertisers can create offers
+        if (!advertiserApi.isStatusActive(request.advertiserId())) {
+            log.warn("Offer creation rejected: Advertiser {} is not ACTIVE", request.advertiserId());
+            throw new BusinessRuleException("Advertiser with id " + request.advertiserId() + " is not ACTIVE");
+        }
+
+        // 3. Map basic fields
         Offre offre = offreMapper.toEntity(request);
 
-        // 3. Resolve or create tags
+        // 4. Resolve or create tags
         if (request.tags() != null) {
             for (String tagName : request.tags()) {
                 String normalized = tagName.trim().toLowerCase();
@@ -57,12 +68,14 @@ public class OffreService {
             }
         }
 
-        // 4. Save and return response DTO
+        // 5. Save and return response DTO
         Offre saved = offreRepository.save(offre);
+        log.info("Successfully created offer with ID: {}", saved.getId());
         return offreMapper.toResponse(saved);
     }
 
     public OffreResponse getOffreById(Long id) {
+        log.debug("Fetching offer with ID: {}", id);
         return offreRepository.findById(id)
             .map(offreMapper::toResponse)
             .orElseThrow(() -> new ResourceNotFoundException("Offer not found with id: " + id));
@@ -70,42 +83,41 @@ public class OffreService {
 
     @Transactional
     public OffreResponse updateOffre(Long id, UpdateOffreRequest request) {
-        // 1. Find the offer
+        log.info("Updating offer with ID: {}", id);
         Offre offre = offreRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Offer not found with id: " + id));
         
-        // 2. Update offer attributes
         offre.update(request.title(), request.description(), request.landingUrl(), request.niche());
 
-        // 3. Clear tags and re-add the new tags
         offre.clearTags();
         Set<Tag> newTags = resolveTags(request.tags());
         newTags.forEach(offre::addTag);
     
-        // 4. Return response (dirty checking handles the SQL UPDATE automatically)
+        log.info("Successfully updated offer ID: {}", id);
         return offreMapper.toResponse(offre);
     }
 
     @Transactional 
     public CampaignResponse createCampaign(Long id, CreateCampaignRequest request) {
-        // 1. Find the offer
+        log.info("Creating campaign for offer ID: {}", id);
         Offre offre = offreRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Offer not found with id: " + id));
-        
-        // 2. Map request to Campaign entity
-        Campaign campaign = campaignMapper.toEntity(request);
 
-        // 3. Establish bidirectional relationship
+        if (!advertiserApi.isStatusActive(offre.getAdvertiserId())) {
+            log.warn("Campaign creation rejected: Advertiser {} is not ACTIVE", offre.getAdvertiserId());
+            throw new BusinessRuleException("Cannot create campaign: Advertiser " + offre.getAdvertiserId() + " is not ACTIVE");
+        }
+        
+        Campaign campaign = campaignMapper.toEntity(request);
         offre.addCampaign(campaign);
-    
-        // 4. Persist to generate IDENTITY primary key immediately
         Campaign savedCampaign = campaignRepository.save(campaign);
 
-        // 5. Return response DTO with generated id
+        log.info("Successfully created campaign ID: {} for offer ID: {}", savedCampaign.getId(), id);
         return campaignMapper.toResponse(savedCampaign);
     }
 
     public Page<OffreResponse> searchOffres(Niche niche, Long advertiserId, String tag, String keyword, Pageable pageable) {
+        log.debug("Searching offers with niche={}, advertiserId={}, tag={}, keyword={}", niche, advertiserId, tag, keyword);
         Specification<Offre> spec = Specification
             .where(OffreSpecification.hasNiche(niche))
             .and(OffreSpecification.hasAdvertiserId(advertiserId))
