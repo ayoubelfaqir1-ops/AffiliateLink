@@ -31,7 +31,7 @@ public class CampaignController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<CampaignResponse> updateStatus(@PathVariable Long id ,@Valid @RequestBody UpdateCampaignStatusRequest request) {
+    public ResponseEntity<Void> updateStatus(@PathVariable Long id ,@Valid @RequestBody UpdateCampaignStatusRequest request) {
         campaignService.updateStatus(id ,request);
         return ResponseEntity.noContent().build();
     }
