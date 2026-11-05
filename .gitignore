@@ -42,3 +42,7 @@ docs/
 
 # Agent configs
 .agents/
+
+# Application runtime logs
+logs/
+*.log
