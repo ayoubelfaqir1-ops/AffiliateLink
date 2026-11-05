@@ -8,7 +8,7 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import ma.youcode.affiliatelink.profile.entity.enums.Niche;
+import ma.youcode.affiliatelink.common.enums.Niche;
 
 @Entity
 @Table(name = "profile_publishers")

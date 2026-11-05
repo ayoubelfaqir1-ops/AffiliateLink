@@ -1,7 +1,7 @@
 package ma.youcode.affiliatelink.profile.dto;
 
 import ma.youcode.affiliatelink.profile.entity.Publisher;
-import ma.youcode.affiliatelink.profile.entity.enums.Niche;
+import ma.youcode.affiliatelink.common.enums.Niche;
 import ma.youcode.affiliatelink.profile.entity.enums.ProfileStatus;
 
 import java.time.LocalDateTime;
