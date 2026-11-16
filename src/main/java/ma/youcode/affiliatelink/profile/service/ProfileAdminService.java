@@ -2,8 +2,9 @@ package ma.youcode.affiliatelink.profile.service;
 
 import lombok.RequiredArgsConstructor;
 import ma.youcode.affiliatelink.common.exception.ResourceNotFoundException;
-import ma.youcode.affiliatelink.profile.api.ProfileSuspended;
+import ma.youcode.affiliatelink.profile.api.AdvertiserSuspended;
 import ma.youcode.affiliatelink.profile.dto.UpdateProfileStatusRequest;
+import ma.youcode.affiliatelink.profile.entity.Advertiser;
 import ma.youcode.affiliatelink.profile.entity.Profile;
 import ma.youcode.affiliatelink.profile.entity.enums.ProfileStatus;
 import ma.youcode.affiliatelink.profile.repository.ProfileRepository;
@@ -25,8 +26,8 @@ public class ProfileAdminService {
 
         profile.changeStatus(request.status());
         profileRepository.save(profile);
-        if(request.status() == ProfileStatus.SUSPENDED) {
-            events.publishEvent(new ProfileSuspended(profile.getId(),profile.getEmail()));
-        };
+        if (request.status() == ProfileStatus.SUSPENDED && profile instanceof Advertiser) {
+            events.publishEvent(new AdvertiserSuspended(profile.getId(), profile.getEmail()));
+        }
     }
 }
