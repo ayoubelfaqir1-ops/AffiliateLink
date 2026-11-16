@@ -141,4 +141,8 @@ public class OffreService {
         }
         return resolvedTags;
     }
+
+    public void miseEnsituation(Long id) {
+
+    }
 }

@@ -7,7 +7,7 @@ spring:
     open-in-view: false
   output:
     ansi:
-      console-available: ALWAYS
+      enabled: ALWAYS
 server:
   port: 8081
 
